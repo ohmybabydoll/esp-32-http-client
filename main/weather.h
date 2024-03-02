@@ -12,11 +12,13 @@ extern "C" {
 #define MAX_HTTP_OUTPUT_BUFFER 2048
 #define GPIO_INPUT_PIN GPIO_NUM_0
 
-static esp_err_t initnvs(void);
+void init_weather(void);
 
-static void http_test_task(void *pvParameters);
+esp_err_t initnvs(void);
 
-static void http_rest_with_url(void);
+void http_test_task(void *pvParameters);
+
+void http_rest_with_url(void);
 
 esp_err_t _http_event_handler(esp_http_client_event_t *evt);
 

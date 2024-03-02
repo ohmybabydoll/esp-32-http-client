@@ -14,7 +14,6 @@
 #endif
 
 #include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
 #include "esp_system.h"
 
 #include "esp_http_client.h"
@@ -34,7 +33,7 @@ static char *wind_dir;   //风向
 static int rh=0;   //湿度
 
 
-void app_main(void)
+void init_weather(void)
 {   esp_err_t ret = initnvs();
     ESP_ERROR_CHECK(ret);  
     ESP_ERROR_CHECK(esp_netif_init());
@@ -46,14 +45,12 @@ void app_main(void)
      */
     ESP_ERROR_CHECK(example_connect());
     ESP_LOGI(TAG,"Connected to AP, begin http example");
-
-    xTaskCreate(&http_test_task, "http_test_task", 8192, NULL, 5, NULL); // 创建一个task任务，类似于线程。
 }
 
 /**
  * 初始化 nvs（非易失性存储）断电后可保存数据，通常用来保存配置数据。
 */
-static esp_err_t initnvs(void){
+esp_err_t initnvs(void){
     esp_err_t ret = nvs_flash_init();   //初始化
     if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
       ESP_ERROR_CHECK(nvs_flash_erase()); // 若不可用，擦除数据重新初始化
@@ -66,7 +63,7 @@ static esp_err_t initnvs(void){
 /**
  * task 回调函数  按键调用 http_rest_with_url()
 */
-static void http_test_task(void *pvParameters) {
+void http_test_task(void *pvParameters) {
   while(1){
     if(gpio_get_level(GPIO_INPUT_PIN)==0) {
       http_rest_with_url();
@@ -77,7 +74,7 @@ static void http_test_task(void *pvParameters) {
   vTaskDelete(NULL);
 }
 
-static void http_rest_with_url(void)
+void http_rest_with_url(void)
 {
     // 缓冲区用于存储请求响应数据
     // Declare local_response_buffer with size (MAX_HTTP_OUTPUT_BUFFER + 1) to prevent out of bound access when
