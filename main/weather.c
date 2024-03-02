@@ -103,19 +103,22 @@ void http_rest_with_url(void)
     cJSON *result = cJSON_GetObjectItem(root,"result");
     cJSON *location = cJSON_GetObjectItem(result,"location");
     cJSON *now = cJSON_GetObjectItem(result,"now");
-    name = cJSON_GetObjectItem(location, "name")->valuestring;
-    text = cJSON_GetObjectItem(now, "text")->valuestring;
-    temp = cJSON_GetObjectItem(now, "temp")->valueint;
-    rh = cJSON_GetObjectItem(now, "rh")->valueint;
-    wind_class = cJSON_GetObjectItem(now, "wind_class")->valuestring;
-    wind_dir = cJSON_GetObjectItem(now, "wind_dir")->valuestring;
 
-    ESP_LOGI(TAG,"城市 %s",name);
-    ESP_LOGI(TAG,"天气 %s",text);
-    ESP_LOGI(TAG,"温度 %d",temp);
-    ESP_LOGI(TAG,"湿度 %d",rh);
-    ESP_LOGI(TAG,"风力 %s",wind_class);
-    ESP_LOGI(TAG,"风向 %s",wind_dir);
+    weather_msg msg = {
+    .name = cJSON_GetObjectItem(location, "name")->valuestring,
+    .text = cJSON_GetObjectItem(now, "text")->valuestring,
+    .temp = cJSON_GetObjectItem(now, "temp")->valueint,
+    .rh = cJSON_GetObjectItem(now, "rh")->valueint,
+    .wind_class = cJSON_GetObjectItem(now, "wind_class")->valuestring,
+    .wind_dir = cJSON_GetObjectItem(now, "wind_dir")->valuestring
+    };
+
+    ESP_LOGI(TAG,"城市 %s",msg.name);
+    ESP_LOGI(TAG,"天气 %s",msg.text);
+    ESP_LOGI(TAG,"温度 %d",msg.temp);
+    ESP_LOGI(TAG,"湿度 %d",msg.rh);
+    ESP_LOGI(TAG,"风力 %s",msg.wind_class);
+    ESP_LOGI(TAG,"风向 %s",msg.wind_dir);
 
     cJSON_Delete(root);
     esp_http_client_cleanup(client);
