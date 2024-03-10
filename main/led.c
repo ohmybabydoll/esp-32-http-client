@@ -14,10 +14,13 @@ static int brightness = 0;
 int led_array[LED_STRIP_LED_ROWS][LED_STRIP_LED_COLS];         // 根据led的矩阵生成的数组
 int led_spiral_array[LED_STRIP_LED_ROWS * LED_STRIP_LED_COLS]; // 根据上面的数组生成的led索引螺旋一维数组，实现向内螺旋流水灯
 static int led_flow_index = 0;                                 // 流水灯索引
+extern SemaphoreHandle_t json_done;
+extern SemaphoreHandle_t data_ready;
+extern weather_msg w_msg;
 
 void init_led(void)
 {
-    json_done = xSemaphoreCreateBinary();
+    // json_done = xSemaphoreCreateBinary();
     init_led_array();
 }
 
@@ -26,12 +29,27 @@ void init_led_array(void)
     int start = 0;
     for (int i = 0; i < LED_STRIP_LED_ROWS; i++)
     {
-        for (int j = 0; j < LED_STRIP_LED_COLS; j++)
+        // 奇数
+        if (i % 2 == 1)
         {
-            led_array[i][j] = start++;
+            for (int j = 0; j < LED_STRIP_LED_COLS; j++)
+            {
+                led_array[i][j] = start++;
+            }
+        }
+        else
+        {
+            for (int k = LED_STRIP_LED_ROWS-1; k >= 0; k--)
+            {
+                led_array[i][k] = start++;
+            }
         }
     }
     SpiralTravelOfArray();
+    // for (int k = 0; k < LED_STRIP_LED_NUMBERS; k++)
+    // {
+    //     led_spiral_array[k] = k;
+    // }
 }
 
 /**
@@ -113,20 +131,17 @@ void SpiralTravelOfArray(void)
  */
 void led_breath(led_strip_handle_t led_strip)
 {
-
+    //ESP_ERROR_CHECK(led_strip_clear(led_strip));
     for (int i = 0; i < LED_STRIP_LED_NUMBERS; i++)
     {
-        ESP_ERROR_CHECK(led_strip_set_pixel(led_strip, i, rgb.red, rgb.green, rgb.blue));
+        ESP_ERROR_CHECK(led_strip_set_pixel(led_strip, i, rgb.red*brightness / 255, rgb.green*brightness / 255, rgb.blue*brightness / 255));
     }
     ESP_ERROR_CHECK(led_strip_refresh(led_strip));
-    rgb.red = rgb.red * brightness / 255;
-    rgb.green = rgb.green * brightness / 255;
-    rgb.blue = rgb.blue * brightness / 255;
+    brightness += breath_direction;
     if (brightness == 0 || brightness == 255)
     {
         breath_direction = -breath_direction;
     }
-    brightness += breath_direction;
 }
 
 /**
@@ -134,7 +149,8 @@ void led_breath(led_strip_handle_t led_strip)
  */
 void led_flow(led_strip_handle_t led_strip)
 {
-    int tails = 3;
+    ESP_ERROR_CHECK(led_strip_clear(led_strip));
+    int tails = 10;
     for (int i = 0; i < tails; i++)
     {
         int act_index = led_flow_index + i;
@@ -146,7 +162,7 @@ void led_flow(led_strip_handle_t led_strip)
         ESP_ERROR_CHECK(led_strip_set_pixel(led_strip, led_num, rgb.red, rgb.green, rgb.blue));
     }
     ESP_ERROR_CHECK(led_strip_refresh(led_strip));
-    vTaskDelay(pdMS_TO_TICKS(20));
+    vTaskDelay(pdMS_TO_TICKS(50));
     if (led_flow_index == LED_STRIP_LED_NUMBERS - 1)
     {
         led_flow_index = 0;
@@ -155,7 +171,6 @@ void led_flow(led_strip_handle_t led_strip)
     {
         led_flow_index++;
     }
-    ESP_ERROR_CHECK(led_strip_clear(led_strip));
 }
 
 void led_task(void *pvParameters)
@@ -173,6 +188,7 @@ void led_task(void *pvParameters)
         if (view_mode == LED_VIEW_BREATH)
         {
             led_breath(led_strip);
+            //vTaskDelay(pdMS_TO_TICKS(10));
         }
         else if (view_mode == LED_VIEW_FLOW)
         {
@@ -201,6 +217,11 @@ void set_color_by_weather(void)
         rgb.red = 255;
         rgb.green = 18;
         rgb.blue = 18;
+    }
+    else
+    {
+        view_mode = LED_VIEW_BREATH;
+        ESP_LOGI(TAG, "default color type");
     }
 }
 

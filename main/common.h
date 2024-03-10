@@ -24,9 +24,10 @@ extern "C"
      * 编译成立目标文件，再被链接器链接起来，就相当于 common.h 的代码重复了一次，如果不加 static 就会重复
      * 定义，报错 multiple definition of .. first defined here
     */
-    static weather_msg w_msg = {0, "", "", "", "", 0}; 
-    static SemaphoreHandle_t data_ready; // 信号量，天气数据已生成，可以供led.c调用
-    static SemaphoreHandle_t json_done;  // led.c已使用完数据，weather.c 可以将json释放掉
+     
+
+
+     void init_semaphore(void);
 
 #ifdef __cplusplus
 }

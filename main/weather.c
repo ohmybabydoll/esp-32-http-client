@@ -23,6 +23,9 @@
 #include "common.h"
 
 static const char *TAG = "WEATHER-CLIENT"; // 用于打日志
+extern SemaphoreHandle_t json_done;
+extern SemaphoreHandle_t data_ready;
+extern weather_msg w_msg;
 
 void init_weather(void)
 {
@@ -37,7 +40,7 @@ void init_weather(void)
      */
     ESP_ERROR_CHECK(example_connect());
     ESP_LOGI(TAG, "Connected to AP, begin http example");
-    data_ready = xSemaphoreCreateBinary();
+    // data_ready = xSemaphoreCreateBinary();
 }
 
 /**
